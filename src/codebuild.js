@@ -23,6 +23,8 @@ export default function (config) {
    * @param  {Object}   options.log - logger
    * @return {Object[]}
    */
+  // TODO is this really a list? does an sns event contain multiple records and each is a payload?
+  // TODO we need this to create multiple params (one for each project we want to kick off)
   function buildParams(payloads, { log }) {
     return payloads.reduce((acc, p) => {
       // define base parameters
@@ -47,9 +49,10 @@ export default function (config) {
       // define source version based on event name
       switch (p.eventName) {
         case 'pull_request':
+          // TODO this needs to be updated to duplicate the cb functionality to determine what kind of PR event it is and kick off builds accordingly
           param.sourceVersion = `pr/${p.number}`;
           break;
-        case 'release':
+        case 'release': // TODO this "should" work for the release process since that will be the semver tag that we want to use for the docker image
           param.sourceVersion = p.release.tag_name;
           break;
         default:
