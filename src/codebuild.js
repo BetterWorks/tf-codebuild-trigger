@@ -31,18 +31,15 @@ export default function (config) {
         case 'pull_request':
           // eslint-disable-next-line no-case-declarations
           allBuildParams = BUILDS.map((build) => {
-            const param = {
+            return {
               projectName: build,
               sourceVersion: `pr/${p.number}`,
-            };
-            if (p.merged) {
-              param.environmentVariablesOverride = [{
+              environmentVariablesOverride: [{
                 name: 'BUILD_TYPE',
                 type: 'string',
-                value: 'master',
-              }];
-            }
-            return param;
+                value: p.merged ? 'master' : 'pr',
+              }],
+            };
           });
           break;
         case 'release': // TODO this "should" work for the release process since that will be the semver tag that we want to use for the docker image

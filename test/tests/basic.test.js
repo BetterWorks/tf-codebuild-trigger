@@ -40,132 +40,66 @@ describe('basic', function () {
     expect(spy.callCount).to.equal(0);
   });
 
-  it('should start the correct builds for PR opened events (PULL_REQUEST_CREATED)', async function () {
-    const e = sns.event(
-      sns.record(JSON.stringify({
-        action: 'opened',
-        number: 20,
-        repository: {
-          name: 'BetterWorks',
-        },
-      }), { subject: 'pull_request', topicArn: this.topicArn }),
-    );
-    const client = this.codebuild._client();
-    this.sandbox.stub(client, 'batchGetProjects').returns({
-      promise: sinon.stub().resolves({
-        projectsNotFound: [],
-      }),
-    });
-    this.sandbox.stub(client, 'startBuild').returns({
-      promise: sinon.stub().resolves({}),
-    });
-    const result = await fromCallback(done => handler(e, {}, done));
-    expect(result).to.deep.equal([{}, {}, {}, {}, {}, {}]);
-    expect(client.startBuild.callCount).to.equal(6);
-    const startBuildCalls = client.startBuild;
-    expect(startBuildCalls.args.length).to.equal(6);
-    startBuildCalls.args.forEach(([params]) => {
-      expect(params).to.have.property('sourceVersion', 'pr/20');
-      expect(params).to.have.property('projectName');
-      expect(BUILDS).to.contain(params.projectName);
-    });
-  });
+  const githubEventToCodebuildEvents = [
+    {
+      githubEvent: 'opened',
+      merged: false,
+      codebuildEvent: 'CREATED',
+      envVarOverride: 'pr',
+    },
+    {
+      githubEvent: 'reopened',
+      merged: false,
+      codebuildEvent: 'REOPENED',
+      envVarOverride: 'pr',
+    },
+    {
+      githubEvent: 'synchronize',
+      merged: false,
+      codebuildEvent: 'UPDATED',
+      envVarOverride: 'pr',
+    },
+    {
+      githubEvent: 'closed',
+      merged: true,
+      codebuildEvent: 'MERGED',
+      envVarOverride: 'master',
+    },
+  ];
 
-  it('should start the correct builds for PR reopened events (PULL_REQUEST_REOPENED)', async function () {
-    const e = sns.event(
-      sns.record(JSON.stringify({
-        action: 'reopened',
-        number: 20,
-        repository: {
-          name: 'BetterWorks',
-        },
-      }), { subject: 'pull_request', topicArn: this.topicArn }),
-    );
-    const client = this.codebuild._client();
-    this.sandbox.stub(client, 'batchGetProjects').returns({
-      promise: sinon.stub().resolves({
-        projectsNotFound: [],
-      }),
-    });
-    this.sandbox.stub(client, 'startBuild').returns({
-      promise: sinon.stub().resolves({}),
-    });
-    const result = await fromCallback(done => handler(e, {}, done));
-    expect(result).to.deep.equal([{}, {}, {}, {}, {}, {}]);
-    expect(client.startBuild.callCount).to.equal(6);
-    const startBuildCalls = client.startBuild;
-    expect(startBuildCalls.args.length).to.equal(6);
-    startBuildCalls.args.forEach(([params]) => {
-      expect(params).to.have.property('sourceVersion', 'pr/20');
-      expect(params).to.have.property('projectName');
-      expect(BUILDS).to.contain(params.projectName);
-    });
-  });
-
-  it('should start the correct builds for PR synchronize events (PULL_REQUEST_UPDATED)', async function () {
-    const e = sns.event(
-      // pull request
-      sns.record(JSON.stringify({
-        action: 'synchronize',
-        number: 20,
-        repository: {
-          name: 'BetterWorks',
-        },
-      }), { subject: 'pull_request', topicArn: this.topicArn }),
-    );
-    const client = this.codebuild._client();
-    this.sandbox.stub(client, 'batchGetProjects').returns({
-      promise: sinon.stub().resolves({
-        projectsNotFound: [],
-      }),
-    });
-    this.sandbox.stub(client, 'startBuild').returns({
-      promise: sinon.stub().resolves({}),
-    });
-    const result = await fromCallback(done => handler(e, {}, done));
-    expect(result).to.deep.equal([{}, {}, {}, {}, {}, {}]);
-    expect(client.startBuild.callCount).to.equal(6);
-    const startBuildCalls = client.startBuild;
-    expect(startBuildCalls.args.length).to.equal(6);
-    startBuildCalls.args.forEach(([params]) => {
-      expect(params).to.have.property('sourceVersion', 'pr/20');
-      expect(params).to.have.property('projectName');
-      expect(BUILDS).to.contain(params.projectName);
-    });
-  });
-
-  it('should start the correct builds for PR closed with merge events (PULL_REQUEST_MERGED)', async function () {
-    const e = sns.event(
-      // pull request
-      sns.record(JSON.stringify({
-        action: 'closed',
-        number: 20,
-        repository: {
-          name: 'BetterWorks',
-        },
-        merged: true,
-      }), { subject: 'pull_request', topicArn: this.topicArn }),
-    );
-    const client = this.codebuild._client();
-    this.sandbox.stub(client, 'batchGetProjects').returns({
-      promise: sinon.stub().resolves({
-        projectsNotFound: [],
-      }),
-    });
-    this.sandbox.stub(client, 'startBuild').returns({
-      promise: sinon.stub().resolves({}),
-    });
-    const result = await fromCallback(done => handler(e, {}, done));
-    expect(result).to.deep.equal([{}, {}, {}, {}, {}, {}]);
-    expect(client.startBuild.callCount).to.equal(6);
-    const startBuildCalls = client.startBuild;
-    expect(startBuildCalls.args.length).to.equal(6);
-    startBuildCalls.args.forEach(([params]) => {
-      expect(params).to.have.property('sourceVersion', 'pr/20');
-      expect(params).to.have.property('projectName');
-      expect(BUILDS).to.contain(params.projectName);
-      expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'BUILD_TYPE');
-      expect(params).to.have.nested.property('environmentVariablesOverride.0.value', 'master');
+  githubEventToCodebuildEvents.forEach((item) => {
+    it(`should start the correct builds for PR ${item.githubEvent} events (PULL_REQUEST_${item.codebuildEvent})`, async function () {
+      const e = sns.event(
+        sns.record(JSON.stringify({
+          action: `${item.githubEvent}`,
+          number: 20,
+          repository: {
+            name: 'BetterWorks',
+          },
+          merged: JSON.parse(`${item.merged}`),
+        }), { subject: 'pull_request', topicArn: this.topicArn }),
+      );
+      const client = this.codebuild._client();
+      this.sandbox.stub(client, 'batchGetProjects').returns({
+        promise: sinon.stub().resolves({
+          projectsNotFound: [],
+        }),
+      });
+      this.sandbox.stub(client, 'startBuild').returns({
+        promise: sinon.stub().resolves({}),
+      });
+      const result = await fromCallback((done) => handler(e, {}, done));
+      expect(result).to.deep.equal([{}, {}, {}, {}, {}, {}]);
+      expect(client.startBuild.callCount).to.equal(6);
+      const startBuildCalls = client.startBuild;
+      expect(startBuildCalls.args.length).to.equal(6);
+      startBuildCalls.args.forEach(([params]) => {
+        expect(params).to.have.property('sourceVersion', 'pr/20');
+        expect(params).to.have.property('projectName');
+        expect(BUILDS).to.contain(params.projectName);
+        expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'BUILD_TYPE');
+        expect(params).to.have.nested.property('environmentVariablesOverride.0.value', `${item.envVarOverride}`);
+      });
     });
   });
 

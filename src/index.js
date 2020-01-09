@@ -22,6 +22,7 @@ export const SUCCESS = 'event:success';
 export async function handler(e, ctx, done) {
   // freeze the node process immediately on exit
   // see http://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-using-old-runtime.html
+  // TODO do we need this anymore since we're using node 12?
   ctx.callbackWaitsForEmptyEventLoop = false;
   // load modules
   const modules = await container.load({
