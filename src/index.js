@@ -63,12 +63,8 @@ export async function processEvent(e, { codebuild, log, sns }) {
   if (!names.length) {
     return NOOP;
   }
-  // TODO this is probably not needed because our cb projects aren't named by repo
-  // the aws api also doesn't support partial names so we can't rely on a consistent prefix
-  const missing = await codebuild.findMissingProjects(names);
   payloads = payloads.filter((p) => {
-    const name = get(p, 'repository.name');
-    return name && !missing.includes(name); //TODO remove && check
+    return get(p, 'repository.name');
   });
   if (!payloads.length) {
     return NOOP;

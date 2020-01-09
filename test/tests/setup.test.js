@@ -21,8 +21,9 @@ before(async function () {
                     type: 'string',
                     enum: [
                       'opened',
-                      'edited',
+                      'synchronize',
                       'reopened',
+                      'closed',
                     ],
                   },
                 },

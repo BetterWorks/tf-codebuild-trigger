@@ -11,8 +11,9 @@
             "type": "string",
             "enum": [
               "opened",
-              "edited",
-              "reopened"
+              "synchronize",
+              "reopened",
+              "closed"
             ]
           }
         },

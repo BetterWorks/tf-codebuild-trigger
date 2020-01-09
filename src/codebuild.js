@@ -11,10 +11,11 @@ export const inject = {
 
 export const PARAMETER = 'PARAMETER_STORE';
 export const PLAINTEXT = 'PLAINTEXT';
+// TODO bw-cypress needs to be re-added once cypress can run in codebuild
+export const BUILDS = ['bw-frontend', 'bw-backend', 'bw-ptdiff', 'bw-protractor', 'bw-cucumber', 'bw-image'];
 
 export default function (config) {
   const codebuild = new AWS.CodeBuild();
-
 
   /**
    * Tranform github event payloads into codebuild build parameters
@@ -23,43 +24,35 @@ export default function (config) {
    * @param  {Object}   options.log - logger
    * @return {Object[]}
    */
-  // TODO is this really a list? does an sns event contain multiple records and each is a payload?
-  // TODO we need this to create multiple params (one for each project we want to kick off)
   function buildParams(payloads, { log }) {
     return payloads.reduce((acc, p) => {
-      // define base parameters
-      const param = {
-        projectName: p.repository.name,
-        buildspecOverride: p.buildspecOverride,
-        environmentVariablesOverride: [{
-          name: 'REPOSITORY_NAME',
-          value: p.repository.name,
-          type: PLAINTEXT,
-        }],
-      };
-      // add environment variables from ssm parameter store
-      const parameters = config.get('parameters', {});
-      Object.keys(parameters).forEach((name) => {
-        param.environmentVariablesOverride.push({
-          name,
-          type: PARAMETER,
-          value: parameters[name],
-        });
-      });
-      // define source version based on event name
+      let allBuildParams = [];
       switch (p.eventName) {
         case 'pull_request':
-          // TODO this needs to be updated to duplicate the cb functionality to determine what kind of PR event it is and kick off builds accordingly
-          param.sourceVersion = `pr/${p.number}`;
+          // eslint-disable-next-line no-case-declarations
+          allBuildParams = BUILDS.map((build) => {
+            const param = {
+              projectName: build,
+              sourceVersion: `pr/${p.number}`,
+            };
+            if (p.merged) {
+              param.environmentVariablesOverride = [{
+                name: 'BUILD_TYPE',
+                type: 'string',
+                value: 'master',
+              }];
+            }
+            return param;
+          });
           break;
         case 'release': // TODO this "should" work for the release process since that will be the semver tag that we want to use for the docker image
-          param.sourceVersion = p.release.tag_name;
+          // TODO this will need to call codepipeline eventually, NOT codebuild
+          // param.sourceVersion = p.release.tag_name;
           break;
         default:
           log.debug({ eventName: p.eventName, name: p.repository.name }, 'unsupported event');
       }
-      acc.push(param);
-      return acc;
+      return allBuildParams;
     }, []);
   }
 
@@ -84,7 +77,7 @@ export default function (config) {
    * @return {Promise}
    */
   async function startBuilds(params) {
-    return Promise.all(params.map(p => codebuild.startBuild(p).promise()));
+    return Promise.all(params.map((p) => codebuild.startBuild(p).promise()));
   }
 
   return {
