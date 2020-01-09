@@ -15,7 +15,7 @@ describe('basic', function () {
       config: 'config',
     });
     Object.assign(this, modules);
-    this.sandbox = sinon.sandbox.create();
+    this.sandbox = sinon.createSandbox();
     this.topicArn = this.config.get('sns.topic_arn');
   });
 

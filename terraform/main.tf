@@ -7,7 +7,7 @@ resource "aws_lambda_function" "trigger" {
   handler       = "index.handler"
   memory_size   = "${var.memory_size}"
   timeout       = "${var.timeout}"
-  runtime       = "nodejs6.10"
+  runtime       = "nodejs12.14.1"
   s3_bucket     = "${var.s3_bucket}"
   s3_key        = "${var.s3_key}"
 
