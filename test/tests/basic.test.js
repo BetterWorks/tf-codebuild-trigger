@@ -103,43 +103,33 @@ describe('basic', function () {
     });
   });
 
-  // TODO we need a test for the release event BUT it is going to have to call codepipeline
-  it.skip('should start the correct builds for release events', async function () {
-    // const e = sns.event(
-    //   sns.record(JSON.stringify({
-    //     action: 'published',
-    //     release: {
-    //       tag_name: 'v1.0.0',
-    //     },
-    //     repository: {
-    //       name: 'foo',
-    //     },
-    //   }), { subject: 'release', topicArn: this.topicArn }),
-    // );
-    // const client = this.codebuild._client();
-    // this.sandbox.stub(client, 'batchGetProjects').returns({
-    //   promise: sinon.stub().resolves({
-    //     projectsNotFound: [],
-    //   }),
-    // });
-    // this.sandbox.stub(client, 'startBuild').returns({
-    //   promise: sinon.stub().resolves({}),
-    // });
-    // const result = await fromCallback(done => handler(e, {}, done));
-    // expect(result).to.deep.equal([{}]);
-    // expect(client.startBuild.callCount).to.equal(1);
-    // // verify release
-    // let call = client.startBuild.getCalls().find(c => /^v/g.test(c.args[0].sourceVersion));
-    // let params = call.args[0]; // eslint-disable-line
-    // expect(params).to.have.property('buildspecOverride', 'buildspec.release.yml');
-    // expect(params).to.have.property('sourceVersion', 'v1.0.0');
-    // expect(params).to.have.property('projectName', 'foo');
-    // expect(params).to.have.property('environmentVariablesOverride')
-    //   .that.is.an('array').with.lengthOf(2);
-    // expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'REPOSITORY_NAME');
-    // expect(params).to.have.nested.property('environmentVariablesOverride.0.value', 'foo');
-    // expect(params).to.have.nested.property('environmentVariablesOverride.1.name', 'SSH_KEY');
-    // expect(params).to.have.nested.property('environmentVariablesOverride.1.type', PARAMETER);
-    // expect(params).to.have.nested.property('environmentVariablesOverride.1.value', this.config.get('parameters.SSH_KEY'));
+  it('should start the correct build for release events', async function () {
+    const e = sns.event(
+      sns.record(JSON.stringify({
+        action: 'published',
+        release: {
+          tag_name: 'v1.0.0',
+        },
+        repository: {
+          name: 'BetterWorks',
+        },
+      }), { subject: 'release', topicArn: this.topicArn }),
+    );
+    const client = this.codebuild._client();
+    this.sandbox.stub(client, 'batchGetProjects').returns({
+      promise: sinon.stub().resolves({
+        projectsNotFound: [],
+      }),
+    });
+    this.sandbox.stub(client, 'startBuild').returns({
+      promise: sinon.stub().resolves({}),
+    });
+    const result = await fromCallback(done => handler(e, {}, done));
+    expect(result).to.deep.equal([{}]);
+    expect(client.startBuild.callCount).to.equal(1);
+    let call = client.startBuild.getCalls().find(c => /^v/g.test(c.args[0].sourceVersion));
+    let params = call.args[0]; // eslint-disable-line
+    expect(params).to.have.property('sourceVersion', 'v1.0.0');
+    expect(params).to.have.property('projectName', 'bw-release-source');
   });
 });

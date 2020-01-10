@@ -42,9 +42,18 @@ export default function (config) {
             };
           });
           break;
-        case 'release': // TODO this "should" work for the release process since that will be the semver tag that we want to use for the docker image
-          // TODO this will need to call codepipeline eventually, NOT codebuild
-          // param.sourceVersion = p.release.tag_name;
+        case 'release':
+          // eslint-disable-next-line no-case-declarations
+          const param = {
+            projectName: 'bw-release-source',
+            sourceVersion: p.release.tag_name,
+            environmentVariablesOverride: [{
+              name: 'REPOSITORY_NAME',
+              value: p.repository.name,
+              type: PLAINTEXT,
+            }],
+          };
+          allBuildParams.push(param);
           break;
         default:
           log.debug({ eventName: p.eventName, name: p.repository.name }, 'unsupported event');
