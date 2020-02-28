@@ -58,3 +58,4 @@ variable "timeout" {
   default     = 10
 }
 
+variable "aws_assume_role_arn" {}

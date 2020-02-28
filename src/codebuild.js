@@ -14,7 +14,7 @@ export const PLAINTEXT = 'PLAINTEXT';
 // TODO bw-cypress needs to be re-added once cypress can run in codebuild
 export const BUILDS = ['bw-frontend', 'bw-backend', 'bw-ptdiff', 'bw-protractor', 'bw-cucumber', 'bw-image'];
 
-export default function (config) {
+export default function () {
   const codebuild = new AWS.CodeBuild();
 
   /**
@@ -30,17 +30,15 @@ export default function (config) {
       switch (p.eventName) {
         case 'pull_request':
           // eslint-disable-next-line no-case-declarations
-          allBuildParams = BUILDS.map((build) => {
-            return {
-              projectName: build,
-              sourceVersion: `pr/${p.number}`,
-              environmentVariablesOverride: [{
-                name: 'BUILD_TYPE',
-                type: 'string',
-                value: p.merged ? 'master' : 'pr',
-              }],
-            };
-          });
+          allBuildParams = BUILDS.map((build) => ({
+            projectName: build,
+            sourceVersion: `pr/${p.number}`,
+            environmentVariablesOverride: [{
+              name: 'BUILD_TYPE',
+              type: 'string',
+              value: p.merged ? 'master' : 'pr',
+            }],
+          }));
           break;
         case 'release':
           // eslint-disable-next-line no-case-declarations

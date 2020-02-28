@@ -1,7 +1,8 @@
-const webpack = require('webpack');
+const ZipPlugin = require('zip-webpack-plugin');
 
 module.exports = {
   target: 'node',
+  mode: 'production',
   entry: {
     index: './src/index.js',
   },
@@ -20,10 +21,15 @@ module.exports = {
       },
     ],
   },
-  plugins: [
-    new webpack.optimize.UglifyJsPlugin({ sourceMap: true, mangle: false, compress: true }),
-  ],
+  optimization: {
+    minimize: true,
+  },
   externals: {
     'aws-sdk': 'aws-sdk',
   },
+  plugins: [
+    new ZipPlugin({
+      filename: 'tf-codebuild-trigger.zip',
+    }),
+  ],
 };

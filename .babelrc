@@ -1,13 +1,10 @@
 {
   "presets": [
-    "stage-0",
-    "env"
+    "@babel/env"
   ],
   "plugins": [
-    ["transform-runtime", { "helpers": false, "polyfill": false, "regenerator": true }],
-    "transform-async-to-generator",
-    "add-module-exports",
-    "transform-object-rest-spread"
+    ["@babel/transform-runtime", { "helpers": false }],
+    "add-module-exports"
   ],
   "sourceMaps": "both"
 }

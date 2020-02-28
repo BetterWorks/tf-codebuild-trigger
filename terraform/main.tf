@@ -1,3 +1,13 @@
+locals {
+  convert_lambda_file = "placeholder.js"
+}
+
+data "archive_file" "tf_codbuild_trigger_file" {
+  type        = "zip"
+  source_file = "${path.module}/${local.convert_lambda_file}"
+  output_path = "${path.module}/${local.convert_lambda_file}.zip"
+}
+
 # lambda function that proceses incoming webhooks from github, verifies signature
 # and publishes to sns
 resource "aws_lambda_function" "trigger" {
@@ -7,9 +17,8 @@ resource "aws_lambda_function" "trigger" {
   handler       = "index.handler"
   memory_size   = var.memory_size
   timeout       = var.timeout
-  runtime       = "nodejs12.14.1"
-  s3_bucket     = var.s3_bucket
-  s3_key        = var.s3_key
+  runtime       = "nodejs12.x"
+  filename      = data.archive_file.tf_codbuild_trigger_file.output_path
 
   environment {
     variables = {

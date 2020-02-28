@@ -17,7 +17,7 @@ export default async function (ssm) {
       Names: process.env.CONFIG_PARAMETER_NAMES.split(','),
       WithDecryption: true,
     }).promise(),
-    new Promise(resolve => setTimeout(resolve, 30000)),
+    new Promise((resolve) => setTimeout(resolve, 30000)),
   ]);
 
   // parse configuration and merge together

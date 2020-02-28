@@ -69,7 +69,7 @@ export default function (config) {
    * @return {String}
    */
   function matchBuildspec(payload) {
-    return Object.keys(buildspecs).find(spec => buildspecs[spec](payload));
+    return Object.keys(buildspecs).find((spec) => buildspecs[spec](payload));
   }
 
   return {

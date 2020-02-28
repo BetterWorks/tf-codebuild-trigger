@@ -60,13 +60,11 @@ export async function processEvent(e, { codebuild, log, sns }) {
   }
   // fetch a list of codebuild projects that do not exist and use it to filter
   // event payloads
-  const names = compact(payloads.map(p => get(p, 'repository.name')));
+  const names = compact(payloads.map((p) => get(p, 'repository.name')));
   if (!names.length) {
     return NOOP;
   }
-  payloads = payloads.filter((p) => {
-    return get(p, 'repository.name');
-  });
+  payloads = payloads.filter((p) => get(p, 'repository.name'));
   if (!payloads.length) {
     return NOOP;
   }

@@ -1,6 +1,8 @@
 import { fromCallback } from 'bluebird';
 import { expect } from 'chai';
-import { before, afterEach, describe, it } from 'mocha';
+import {
+  before, afterEach, describe, it,
+} from 'mocha';
 import sinon from 'sinon';
 
 import { handler, NOOP } from '../../src';
@@ -35,7 +37,7 @@ describe('basic', function () {
       sns.record('{"action":"labeled","repository":{"name":"foo"}}', { subject: 'pull_request', topicArn: this.topicArn }),
     );
     const spy = this.sandbox.spy(this.codebuild, 'findMissingProjects');
-    const result = await fromCallback(done => handler(e, {}, done));
+    const result = await fromCallback((done) => handler(e, {}, done));
     expect(result).to.equal(NOOP);
     expect(spy.callCount).to.equal(0);
   });
@@ -124,10 +126,10 @@ describe('basic', function () {
     this.sandbox.stub(client, 'startBuild').returns({
       promise: sinon.stub().resolves({}),
     });
-    const result = await fromCallback(done => handler(e, {}, done));
+    const result = await fromCallback((done) => handler(e, {}, done));
     expect(result).to.deep.equal([{}]);
     expect(client.startBuild.callCount).to.equal(1);
-    let call = client.startBuild.getCalls().find(c => /^v/g.test(c.args[0].sourceVersion));
+    const call = client.startBuild.getCalls().find((c) => /^v/g.test(c.args[0].sourceVersion));
     let params = call.args[0]; // eslint-disable-line
     expect(params).to.have.property('sourceVersion', 'v1.0.0');
     expect(params).to.have.property('projectName', 'bw-release-source');
