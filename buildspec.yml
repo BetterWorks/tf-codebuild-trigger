@@ -8,6 +8,7 @@ phases:
     commands:
       - HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
       - BUILD_TAG=$(date +%Y-%m-%d.%H%M%S%3N)-$HASH
+      - npm install
   build:
     commands:
       - npm run build
