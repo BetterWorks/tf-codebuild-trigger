@@ -4,11 +4,6 @@ variable "additional_parameter_names" {
   default     = ""
 }
 
-variable "config_parameter_name" {
-  type        = string
-  description = "name of terraform managed ssm parameter"
-}
-
 variable "debug" {
   type        = string
   description = "node debug flag"
@@ -37,21 +32,6 @@ variable "region" {
   description = "aws region"
 }
 
-variable "s3_bucket" {
-  type        = string
-  description = "lambda artifact s3 bucket name"
-}
-
-variable "s3_key" {
-  type        = string
-  description = "lambda artifact s3 key"
-}
-
-variable "sns_topic_arn" {
-  type        = string
-  description = "arn of github topic"
-}
-
 variable "timeout" {
   type        = string
   description = "lambda function timeout"
@@ -59,3 +39,13 @@ variable "timeout" {
 }
 
 variable "aws_assume_role_arn" {}
+
+variable "namespace" {
+  type        = string
+  description = "Namespace (e.g. `cp` or `cloudposse`)"
+}
+
+variable "stage" {
+  type        = string
+  description = "Stage (e.g. `prod`, `dev`, `staging`)"
+}

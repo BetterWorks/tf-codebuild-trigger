@@ -9,14 +9,11 @@ phases:
       - HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
       - BUILD_TAG=$(date +%Y-%m-%d.%H%M%S%3N)-$HASH
       - npm install
+      - PACKAGE_FILE=tf-codebuild-trigger-$BUILD_TAG.zip
   build:
     commands:
       - npm run build
   post_build:
     commands:
-      - mv dist/tf-codebuild-trigger.zip dist/tf-codebuild-trigger-$BUILD_TAG.zip
-
-artifacts:
-  files:
-    - "dist/*.zip"
-  discard-paths: yes
+      - mv dist/tf-codebuild-trigger.zip dist/$PACKAGE_FILE
+      - ./publish-lambda.sh

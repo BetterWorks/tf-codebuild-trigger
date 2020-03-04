@@ -11,6 +11,7 @@ export const inject = {
   require: ['config'],
 };
 
+// TODO: this is probably not going to work
 export default function (config) {
   const ajv = new Ajv({
     useDefaults: true,
@@ -50,8 +51,10 @@ export default function (config) {
         }
         parsed.eventName = record.Sns.Subject;
 
+        // TODO: this is the specific portion that needs to change...we probably don't even need this (or the ssm config param)
         // ensure buildspec match
         const buildspecOverride = matchBuildspec(parsed);
+        console.log(`buildspecOverride ${buildspecOverride}`);
         if (!buildspecOverride) {
           log.warn({ record: JSON.stringify(record) }, 'no buildspec match');
           return acc;

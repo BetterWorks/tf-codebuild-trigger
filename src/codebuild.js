@@ -40,7 +40,7 @@ export default function () {
             }],
           }));
           break;
-        case 'release':
+        case 'release': // TODO: this needs to be changed to reflect the correct flow for release
           // eslint-disable-next-line no-case-declarations
           const param = {
             projectName: 'bw-release-source',
