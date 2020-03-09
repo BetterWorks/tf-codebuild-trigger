@@ -49,3 +49,9 @@ variable "stage" {
   type        = string
   description = "Stage (e.g. `prod`, `dev`, `staging`)"
 }
+
+variable "log_level" {
+  type        = string
+  description = "log verbosity"
+  default     = "info"
+}

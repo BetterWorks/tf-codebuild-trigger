@@ -43,7 +43,7 @@
     }
   },
   "log": {
-    "level": "info"
+    "level": "${log_level}"
   },
   "sns": {
     "topic_arn": "${sns_topic_arn}"

@@ -2,7 +2,7 @@
  * @module sns
  * @overview implements functionality related to parsing github events from sns
  */
-import Ajv from 'ajv';
+// import Ajv from 'ajv';
 import attempt from 'lodash.attempt';
 import get from 'lodash.get';
 
@@ -13,19 +13,19 @@ export const inject = {
 
 // TODO: this is probably not going to work
 export default function (config) {
-  const ajv = new Ajv({
-    useDefaults: true,
-    coerceTypes: true,
-  });
+  // const ajv = new Ajv({
+  //   useDefaults: true,
+  //   coerceTypes: true,
+  // });
 
   const eventSourceARN = config.get('sns.topic_arn');
 
   // compile buildspec validation functions
-  let buildspecs = config.get('github.buildspecs', {});
-  buildspecs = Object.keys(buildspecs).reduce((acc, spec) => {
-    acc[spec] = ajv.compile(buildspecs[spec]);
-    return acc;
-  }, {});
+  // let buildspecs = config.get('github.buildspecs', {});
+  // buildspecs = Object.keys(buildspecs).reduce((acc, spec) => {
+  //   acc[spec] = ajv.compile(buildspecs[spec]);
+  //   return acc;
+  // }, {});
 
   /**
    * Extract github events from lambda event
@@ -44,22 +44,25 @@ export default function (config) {
         }
 
         // filter out records that can not be parsed
-        const parsed = attempt(() => JSON.parse(record.Sns.Message));
+        const decodedRecord = decodeURI(record.Sns.Message);
+        log.debug({ decodedRecord }, 'event:decodedRecord');
+        const parsed = attempt(() => JSON.parse(decodedRecord));
         if (parsed instanceof Error) {
           log.warn({ record: JSON.stringify(record) }, 'parse error');
           return acc;
         }
         parsed.eventName = record.Sns.Subject;
 
-        // TODO: this is the specific portion that needs to change...we probably don't even need this (or the ssm config param)
-        // ensure buildspec match
-        const buildspecOverride = matchBuildspec(parsed);
-        console.log(`buildspecOverride ${buildspecOverride}`);
-        if (!buildspecOverride) {
-          log.warn({ record: JSON.stringify(record) }, 'no buildspec match');
-          return acc;
-        }
-        parsed.buildspecOverride = buildspecOverride;
+        // TODO: this is the specific portion that needs to change...we probably don't
+        //  even need this (or the ssm config param)
+        // // ensure buildspec match
+        // const buildspecOverride = matchBuildspec(parsed);
+        // console.log(`buildspecOverride ${buildspecOverride}`);
+        // if (!buildspecOverride) {
+        //   log.warn({ record: JSON.stringify(record) }, 'no buildspec match');
+        //   return acc;
+        // }
+        // parsed.buildspecOverride = buildspecOverride;
 
         acc.push(parsed);
         return acc;
@@ -71,12 +74,11 @@ export default function (config) {
    * @param  {Object} payload - parsed github event payload
    * @return {String}
    */
-  function matchBuildspec(payload) {
-    return Object.keys(buildspecs).find((spec) => buildspecs[spec](payload));
-  }
+  // function matchBuildspec(payload) {
+  //   return Object.keys(buildspecs).find((spec) => buildspecs[spec](payload));
+  // }
 
   return {
     extractPayloads,
-    matchBuildspec,
   };
 }

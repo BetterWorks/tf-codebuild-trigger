@@ -44,7 +44,7 @@ resource "aws_lambda_function" "trigger" {
     variables = {
       "CONFIG_PARAMETER_NAMES" = join(
         ",",
-        compact([module.cicd_tf_codebuild_trigger_config_label.id, var.additional_parameter_names]),
+        compact([aws_ssm_parameter.configuration.name, var.additional_parameter_names]),
       )
       "DEBUG"    = var.debug
       "NODE_ENV" = var.node_env
@@ -76,6 +76,7 @@ data "template_file" "configuration" {
 
   vars = {
     sns_topic_arn = local.sns_topic_arn
+    log_level     = var.log_level
   }
 }
 
@@ -158,6 +159,17 @@ data "aws_iam_policy_document" "trigger" {
         "${aws_ssm_parameter.configuration.name},${var.additional_parameter_names}",
       ),
     )
+  }
+
+  statement {
+    actions = [
+      "kms:Decrypt"
+    ]
+    effect = "Allow"
+
+    resources = [
+      "*"
+    ]
   }
 
   statement {

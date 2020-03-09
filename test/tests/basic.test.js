@@ -33,8 +33,6 @@ describe('basic', function () {
       sns.record('{ hello }', { topicArn: this.topicArn }),
       // invalid eventName
       sns.record('{"foo":"bar"}', { subject: 'foo', topicArn: this.topicArn }),
-      // no matching buildspec entry
-      sns.record('{"action":"labeled","repository":{"name":"foo"}}', { subject: 'pull_request', topicArn: this.topicArn }),
     );
     const spy = this.sandbox.spy(this.codebuild, 'findMissingProjects');
     const result = await fromCallback((done) => handler(e, {}, done));
