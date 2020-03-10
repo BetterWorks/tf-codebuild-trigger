@@ -11,21 +11,8 @@ export const inject = {
   require: ['config'],
 };
 
-// TODO: this is probably not going to work
 export default function (config) {
-  // const ajv = new Ajv({
-  //   useDefaults: true,
-  //   coerceTypes: true,
-  // });
-
   const eventSourceARN = config.get('sns.topic_arn');
-
-  // compile buildspec validation functions
-  // let buildspecs = config.get('github.buildspecs', {});
-  // buildspecs = Object.keys(buildspecs).reduce((acc, spec) => {
-  //   acc[spec] = ajv.compile(buildspecs[spec]);
-  //   return acc;
-  // }, {});
 
   /**
    * Extract github events from lambda event
@@ -52,30 +39,11 @@ export default function (config) {
         parsed.eventName = record.Sns.Subject;
 
         log.debug({ parsed }, 'event:parsedRecord');
-        // TODO: this is the specific portion that needs to change...we probably don't
-        //  even need this (or the ssm config param)
-        // // ensure buildspec match
-        // const buildspecOverride = matchBuildspec(parsed);
-        // console.log(`buildspecOverride ${buildspecOverride}`);
-        // if (!buildspecOverride) {
-        //   log.warn({ record: JSON.stringify(record) }, 'no buildspec match');
-        //   return acc;
-        // }
-        // parsed.buildspecOverride = buildspecOverride;
 
         acc.push(parsed);
         return acc;
       }, []);
   }
-
-  /**
-   * Find the appropriate buildspec based on event schemas
-   * @param  {Object} payload - parsed github event payload
-   * @return {String}
-   */
-  // function matchBuildspec(payload) {
-  //   return Object.keys(buildspecs).find((spec) => buildspecs[spec](payload));
-  // }
 
   return {
     extractPayloads,

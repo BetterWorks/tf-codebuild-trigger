@@ -131,6 +131,7 @@ describe('basic', function () {
     let params = call.args[0]; // eslint-disable-line
     expect(params).to.have.property('sourceVersion', 'v1.0.0');
     expect(params).to.have.property('projectName', 'bw-release-source');
-    expect(params).to.not.have.property('environmentVariablesOverride');
+    expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'VERSION_TAG');
+    expect(params).to.have.nested.property('environmentVariablesOverride.0.value', 'v1.0.0');
   });
 });

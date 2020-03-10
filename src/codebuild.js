@@ -45,6 +45,11 @@ export default function () {
           const param = {
             projectName: 'bw-release-source',
             sourceVersion: p.release.tag_name,
+            environmentVariablesOverride: [{
+              name: 'VERSION_TAG',
+              type: 'string',
+              value: p.release.tag_name,
+            }],
           };
           allBuildParams.push(param);
           break;
