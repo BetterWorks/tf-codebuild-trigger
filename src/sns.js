@@ -46,6 +46,8 @@ export default function (config) {
         // filter out records that can not be parsed
         const decodedRecord = decodeURI(record.Sns.Message);
         log.debug({ decodedRecord }, 'event:decodedRecord');
+        const decodedRecordAsUriComponent = decodeURIComponent(record.Sns.Message);
+        log.debug({ decodedRecordAsUriComponent }, 'event:decodedRecordAsUriComponent');
         const parsed = attempt(() => JSON.parse(decodedRecord));
         if (parsed instanceof Error) {
           log.warn({ record: JSON.stringify(record) }, 'parse error');

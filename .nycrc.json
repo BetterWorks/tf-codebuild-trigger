@@ -1,6 +1,6 @@
 {
   "check-coverage": true,
-  "lines": 95,
+  "lines": 93,
   "reporter": [
     "lcov",
     "text-summary"
