@@ -99,6 +99,7 @@ describe('basic', function () {
         expect(BUILDS).to.contain(params.projectName);
         expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'BUILD_TYPE');
         expect(params).to.have.nested.property('environmentVariablesOverride.0.value', `${item.envVarOverride}`);
+        expect(params).to.have.nested.property('environmentVariablesOverride.0.type', 'PLAINTEXT');
       });
     });
   });
@@ -133,5 +134,6 @@ describe('basic', function () {
     expect(params).to.have.property('projectName', 'bw-release-source');
     expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'VERSION_TAG');
     expect(params).to.have.nested.property('environmentVariablesOverride.0.value', 'v1.0.0');
+    expect(params).to.have.nested.property('environmentVariablesOverride.0.type', 'PLAINTEXT');
   });
 });

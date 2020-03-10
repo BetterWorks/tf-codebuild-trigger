@@ -35,7 +35,7 @@ export default function () {
             sourceVersion: `pr/${p.number}`,
             environmentVariablesOverride: [{
               name: 'BUILD_TYPE',
-              type: 'string',
+              type: 'PLAINTEXT',
               value: p.merged ? 'master' : 'pr',
             }],
           }));
@@ -47,7 +47,7 @@ export default function () {
             sourceVersion: p.release.tag_name,
             environmentVariablesOverride: [{
               name: 'VERSION_TAG',
-              type: 'string',
+              type: 'PLAINTEXT',
               value: p.release.tag_name,
             }],
           };
