@@ -44,17 +44,14 @@ export default function (config) {
         }
 
         // filter out records that can not be parsed
-        const decodedRecord = decodeURI(record.Sns.Message);
-        log.debug({ decodedRecord }, 'event:decodedRecord');
-        const decodedRecordAsUriComponent = decodeURIComponent(record.Sns.Message);
-        log.debug({ decodedRecordAsUriComponent }, 'event:decodedRecordAsUriComponent');
-        const parsed = attempt(() => JSON.parse(decodedRecord));
+        const parsed = attempt(() => JSON.parse(record.Sns.Message));
         if (parsed instanceof Error) {
           log.warn({ record: JSON.stringify(record) }, 'parse error');
           return acc;
         }
         parsed.eventName = record.Sns.Subject;
 
+        log.debug({ parsed }, 'event:parsedRecord');
         // TODO: this is the specific portion that needs to change...we probably don't
         //  even need this (or the ssm config param)
         // // ensure buildspec match
