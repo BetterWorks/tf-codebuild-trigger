@@ -41,17 +41,20 @@ export default function () {
           }));
           break;
         case 'release': // TODO: this needs to be changed to reflect the correct flow for release
-          // eslint-disable-next-line no-case-declarations
-          const param = {
-            projectName: 'bw-release-source',
-            sourceVersion: p.release.tag_name,
-            environmentVariablesOverride: [{
-              name: 'VERSION_TAG',
-              type: 'PLAINTEXT',
-              value: p.release.tag_name,
-            }],
-          };
-          allBuildParams.push(param);
+          if (p.action === 'published') {
+            const param = {
+              projectName: 'bw-release-source',
+              sourceVersion: p.release.tag_name,
+              environmentVariablesOverride: [{
+                name: 'VERSION_TAG',
+                type: 'PLAINTEXT',
+                value: p.release.tag_name,
+              }],
+            };
+            allBuildParams.push(param);
+          } else {
+            log.debug({ eventName: p.eventName, action: p.action }, 'unsupported event action');
+          }
           break;
         default:
           log.debug({ eventName: p.eventName, name: p.repository.name }, 'unsupported event');

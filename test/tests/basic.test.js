@@ -104,7 +104,7 @@ describe('basic', function () {
     });
   });
 
-  it('should start the correct build for release events', async function () {
+  it('should start the correct build for release published events', async function () {
     const e = sns.event(
       sns.record(JSON.stringify({
         action: 'published',
@@ -135,5 +135,40 @@ describe('basic', function () {
     expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'VERSION_TAG');
     expect(params).to.have.nested.property('environmentVariablesOverride.0.value', 'v1.0.0');
     expect(params).to.have.nested.property('environmentVariablesOverride.0.type', 'PLAINTEXT');
+  });
+
+  it('should not start any build for release created or released events', async function () {
+    const e = sns.event(
+      sns.record(JSON.stringify({
+        action: 'created',
+        release: {
+          tag_name: 'v1.0.0',
+        },
+        repository: {
+          name: 'BetterWorks',
+        },
+      }), { subject: 'release', topicArn: this.topicArn }),
+      sns.record(JSON.stringify({
+        action: 'released',
+        release: {
+          tag_name: 'v1.0.0',
+        },
+        repository: {
+          name: 'BetterWorks',
+        },
+      }), { subject: 'release', topicArn: this.topicArn }),
+    );
+    const client = this.codebuild._client();
+    this.sandbox.stub(client, 'batchGetProjects').returns({
+      promise: sinon.stub().resolves({
+        projectsNotFound: [],
+      }),
+    });
+    this.sandbox.stub(client, 'startBuild').returns({
+      promise: sinon.stub().resolves({}),
+    });
+    const result = await fromCallback((done) => handler(e, {}, done));
+    expect(result).to.deep.equal([]);
+    expect(client.startBuild.callCount).to.equal(0);
   });
 });
