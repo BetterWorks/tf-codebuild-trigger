@@ -53,7 +53,7 @@ export default function () {
             };
             allBuildParams.push(param);
           } else {
-            log.debug({ eventName: p.eventName, action: p.action }, 'unsupported event action');
+            log.debug({ eventName: p.eventName, action: p.action }, 'unsupported release event action');
           }
           break;
         default:
@@ -61,21 +61,6 @@ export default function () {
       }
       return allBuildParams;
     }, []);
-  }
-
-  /**
-   * Filter out codebuild project names that do not exist
-   * @param  {String[]} names - list of codebuild project names
-   * @return {Promise}
-   */
-  async function findMissingProjects(names) {
-    // fetch codebuild projects by name
-    const { projectsNotFound } = await codebuild.batchGetProjects({
-      names,
-    }).promise();
-    // filter out names without a corresponding codebuild project of the same
-    // name
-    return projectsNotFound;
   }
 
   /**
@@ -90,7 +75,6 @@ export default function () {
   return {
     buildParams,
     _client: () => codebuild,
-    findMissingProjects,
     startBuilds,
   };
 }

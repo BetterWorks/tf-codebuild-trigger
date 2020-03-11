@@ -34,7 +34,7 @@ describe('basic', function () {
       // invalid eventName
       sns.record('{"foo":"bar"}', { subject: 'foo', topicArn: this.topicArn }),
     );
-    const spy = this.sandbox.spy(this.codebuild, 'findMissingProjects');
+    const spy = this.sandbox.spy(this.codebuild, 'buildParams');
     const result = await fromCallback((done) => handler(e, {}, done));
     expect(result).to.equal(NOOP);
     expect(spy.callCount).to.equal(0);
