@@ -45,25 +45,25 @@ describe('basic', function () {
       githubEvent: 'opened',
       merged: false,
       codebuildEvent: 'CREATED',
-      envVarOverride: 'pr',
+      sourceVersion: 'pr/20',
     },
     {
       githubEvent: 'reopened',
       merged: false,
       codebuildEvent: 'REOPENED',
-      envVarOverride: 'pr',
+      sourceVersion: 'pr/20',
     },
     {
       githubEvent: 'synchronize',
       merged: false,
       codebuildEvent: 'UPDATED',
-      envVarOverride: 'pr',
+      sourceVersion: 'pr/20',
     },
     {
       githubEvent: 'closed',
       merged: true,
       codebuildEvent: 'MERGED',
-      envVarOverride: 'master',
+      sourceVersion: 'master',
     },
   ];
 
@@ -94,12 +94,10 @@ describe('basic', function () {
       const startBuildCalls = client.startBuild;
       expect(startBuildCalls.args.length).to.equal(6);
       startBuildCalls.args.forEach(([params]) => {
-        expect(params).to.have.property('sourceVersion', 'pr/20');
+        expect(params).to.have.property('sourceVersion', `${item.sourceVersion}`);
         expect(params).to.have.property('projectName');
         expect(BUILDS).to.contain(params.projectName);
-        expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'BUILD_TYPE');
-        expect(params).to.have.nested.property('environmentVariablesOverride.0.value', `${item.envVarOverride}`);
-        expect(params).to.have.nested.property('environmentVariablesOverride.0.type', 'PLAINTEXT');
+        expect(params).to.not.have.property('environmentVariablesOverride');
       });
     });
   });
@@ -131,7 +129,7 @@ describe('basic', function () {
     const call = client.startBuild.getCalls().find((c) => /^v/g.test(c.args[0].sourceVersion));
     let params = call.args[0]; // eslint-disable-line
     expect(params).to.have.property('sourceVersion', 'v1.0.0');
-    expect(params).to.have.property('projectName', 'bw-release-source');
+    expect(params).to.have.property('projectName', 'bw-app-release');
     expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'VERSION_TAG');
     expect(params).to.have.nested.property('environmentVariablesOverride.0.value', 'v1.0.0');
     expect(params).to.have.nested.property('environmentVariablesOverride.0.type', 'PLAINTEXT');

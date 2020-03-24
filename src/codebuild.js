@@ -32,18 +32,13 @@ export default function () {
           // eslint-disable-next-line no-case-declarations
           allBuildParams = BUILDS.map((build) => ({
             projectName: build,
-            sourceVersion: `pr/${p.number}`,
-            environmentVariablesOverride: [{
-              name: 'BUILD_TYPE',
-              type: 'PLAINTEXT',
-              value: p.merged ? 'master' : 'pr',
-            }],
+            sourceVersion: p.merged ? 'master' : `pr/${p.number}`,
           }));
           break;
-        case 'release': // TODO: this needs to be changed to reflect the correct flow for release
+        case 'release':
           if (p.action === 'published') {
             const param = {
-              projectName: 'bw-release-source',
+              projectName: 'bw-app-release',
               sourceVersion: p.release.tag_name,
               environmentVariablesOverride: [{
                 name: 'VERSION_TAG',
