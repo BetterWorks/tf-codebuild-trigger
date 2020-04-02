@@ -9,6 +9,5 @@ export const inject = {
 };
 
 export default function () {
-  const ssm = new AWS.SSM();
-  return ssm;
+  return new AWS.SSM();
 }

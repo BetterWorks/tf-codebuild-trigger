@@ -14,7 +14,7 @@ export const PLAINTEXT = 'PLAINTEXT';
 // TODO bw-cypress needs to be re-added once cypress can run in codebuild
 export const BUILDS = ['bw-frontend', 'bw-backend', 'bw-ptdiff', 'bw-protractor', 'bw-cucumber', 'bw-image'];
 
-export default function (config) {
+export default function () {
   const codebuild = new AWS.CodeBuild();
 
   /**
@@ -30,46 +30,32 @@ export default function (config) {
       switch (p.eventName) {
         case 'pull_request':
           // eslint-disable-next-line no-case-declarations
-          allBuildParams = BUILDS.map((build) => {
-            return {
-              projectName: build,
-              sourceVersion: `pr/${p.number}`,
-              environmentVariablesOverride: [{
-                name: 'BUILD_TYPE',
-                type: 'string',
-                value: p.merged ? 'master' : 'pr',
-              }],
-            };
-          });
+          allBuildParams = BUILDS.map((build) => ({
+            projectName: build,
+            sourceVersion: p.merged ? 'master' : `pr/${p.number}`,
+          }));
           break;
         case 'release':
-          // eslint-disable-next-line no-case-declarations
-          const param = {
-            projectName: 'bw-release-source',
-            sourceVersion: p.release.tag_name,
-          };
-          allBuildParams.push(param);
+          if (p.action === 'published') {
+            const param = {
+              projectName: 'bw-app-release',
+              sourceVersion: p.release.tag_name,
+              environmentVariablesOverride: [{
+                name: 'VERSION_TAG',
+                type: 'PLAINTEXT',
+                value: p.release.tag_name,
+              }],
+            };
+            allBuildParams.push(param);
+          } else {
+            log.debug({ eventName: p.eventName, action: p.action }, 'unsupported release event action');
+          }
           break;
         default:
           log.debug({ eventName: p.eventName, name: p.repository.name }, 'unsupported event');
       }
       return allBuildParams;
     }, []);
-  }
-
-  /**
-   * Filter out codebuild project names that do not exist
-   * @param  {String[]} names - list of codebuild project names
-   * @return {Promise}
-   */
-  async function findMissingProjects(names) {
-    // fetch codebuild projects by name
-    const { projectsNotFound } = await codebuild.batchGetProjects({
-      names,
-    }).promise();
-    // filter out names without a corresponding codebuild project of the same
-    // name
-    return projectsNotFound;
   }
 
   /**
@@ -84,7 +70,6 @@ export default function (config) {
   return {
     buildParams,
     _client: () => codebuild,
-    findMissingProjects,
     startBuilds,
   };
 }

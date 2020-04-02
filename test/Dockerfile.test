@@ -1,12 +1,14 @@
 FROM node:12
 
-RUN useradd --user-group --create-home --shell /bin/false app
-ENV HOME=/home/app
-WORKDIR $HOME/src
+ENV APP=/home/app
+WORKDIR $APP
 
-COPY .babelrc .eslintrc.json package.json package-lock.json webpack.config.js ./
-RUN npm install
-COPY ./src ./src
-COPY ./test ./test
+RUN mkdir -p $APP/node_modules && chown -R node:node $APP
+COPY .babelrc .eslintrc.json package*.json webpack.config.js $APP/
+USER node
 
-CMD npm test
+RUN npm config set depth=0 && npm install
+COPY --chown=node:node . $APP
+RUN npm run lint
+
+CMD ["npm", "run", "coverage"]

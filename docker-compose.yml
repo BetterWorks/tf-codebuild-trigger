@@ -1,4 +1,4 @@
-version: '2'
+version: '3.5'
 services:
   tf-codebuild-trigger:
     build:
@@ -11,5 +11,5 @@ services:
       NODE_ENV: test
       SNS_TOPIC_ARN: arn:aws:sns:us-east-1:123456789:test-topic
     volumes:
-     - .:/home/app/src
-     - /home/app/src/node_modules
+      - ./:/home/app
+      - /home/app/node_modules

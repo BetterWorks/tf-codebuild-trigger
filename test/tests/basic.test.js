@@ -1,6 +1,8 @@
 import { fromCallback } from 'bluebird';
 import { expect } from 'chai';
-import { before, afterEach, describe, it } from 'mocha';
+import {
+  before, afterEach, describe, it,
+} from 'mocha';
 import sinon from 'sinon';
 
 import { handler, NOOP } from '../../src';
@@ -31,11 +33,9 @@ describe('basic', function () {
       sns.record('{ hello }', { topicArn: this.topicArn }),
       // invalid eventName
       sns.record('{"foo":"bar"}', { subject: 'foo', topicArn: this.topicArn }),
-      // no matching buildspec entry
-      sns.record('{"action":"labeled","repository":{"name":"foo"}}', { subject: 'pull_request', topicArn: this.topicArn }),
     );
-    const spy = this.sandbox.spy(this.codebuild, 'findMissingProjects');
-    const result = await fromCallback(done => handler(e, {}, done));
+    const spy = this.sandbox.spy(this.codebuild, 'buildParams');
+    const result = await fromCallback((done) => handler(e, {}, done));
     expect(result).to.equal(NOOP);
     expect(spy.callCount).to.equal(0);
   });
@@ -45,25 +45,25 @@ describe('basic', function () {
       githubEvent: 'opened',
       merged: false,
       codebuildEvent: 'CREATED',
-      envVarOverride: 'pr',
+      sourceVersion: 'pr/20',
     },
     {
       githubEvent: 'reopened',
       merged: false,
       codebuildEvent: 'REOPENED',
-      envVarOverride: 'pr',
+      sourceVersion: 'pr/20',
     },
     {
       githubEvent: 'synchronize',
       merged: false,
       codebuildEvent: 'UPDATED',
-      envVarOverride: 'pr',
+      sourceVersion: 'pr/20',
     },
     {
       githubEvent: 'closed',
       merged: true,
       codebuildEvent: 'MERGED',
-      envVarOverride: 'master',
+      sourceVersion: 'master',
     },
   ];
 
@@ -94,16 +94,15 @@ describe('basic', function () {
       const startBuildCalls = client.startBuild;
       expect(startBuildCalls.args.length).to.equal(6);
       startBuildCalls.args.forEach(([params]) => {
-        expect(params).to.have.property('sourceVersion', 'pr/20');
+        expect(params).to.have.property('sourceVersion', `${item.sourceVersion}`);
         expect(params).to.have.property('projectName');
         expect(BUILDS).to.contain(params.projectName);
-        expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'BUILD_TYPE');
-        expect(params).to.have.nested.property('environmentVariablesOverride.0.value', `${item.envVarOverride}`);
+        expect(params).to.not.have.property('environmentVariablesOverride');
       });
     });
   });
 
-  it('should start the correct build for release events', async function () {
+  it('should start the correct build for release published events', async function () {
     const e = sns.event(
       sns.record(JSON.stringify({
         action: 'published',
@@ -124,13 +123,50 @@ describe('basic', function () {
     this.sandbox.stub(client, 'startBuild').returns({
       promise: sinon.stub().resolves({}),
     });
-    const result = await fromCallback(done => handler(e, {}, done));
+    const result = await fromCallback((done) => handler(e, {}, done));
     expect(result).to.deep.equal([{}]);
     expect(client.startBuild.callCount).to.equal(1);
-    let call = client.startBuild.getCalls().find(c => /^v/g.test(c.args[0].sourceVersion));
+    const call = client.startBuild.getCalls().find((c) => /^v/g.test(c.args[0].sourceVersion));
     let params = call.args[0]; // eslint-disable-line
     expect(params).to.have.property('sourceVersion', 'v1.0.0');
-    expect(params).to.have.property('projectName', 'bw-release-source');
-    expect(params).to.not.have.property('environmentVariablesOverride');
+    expect(params).to.have.property('projectName', 'bw-app-release');
+    expect(params).to.have.nested.property('environmentVariablesOverride.0.name', 'VERSION_TAG');
+    expect(params).to.have.nested.property('environmentVariablesOverride.0.value', 'v1.0.0');
+    expect(params).to.have.nested.property('environmentVariablesOverride.0.type', 'PLAINTEXT');
+  });
+
+  it('should not start any build for release created or released events', async function () {
+    const e = sns.event(
+      sns.record(JSON.stringify({
+        action: 'created',
+        release: {
+          tag_name: 'v1.0.0',
+        },
+        repository: {
+          name: 'BetterWorks',
+        },
+      }), { subject: 'release', topicArn: this.topicArn }),
+      sns.record(JSON.stringify({
+        action: 'released',
+        release: {
+          tag_name: 'v1.0.0',
+        },
+        repository: {
+          name: 'BetterWorks',
+        },
+      }), { subject: 'release', topicArn: this.topicArn }),
+    );
+    const client = this.codebuild._client();
+    this.sandbox.stub(client, 'batchGetProjects').returns({
+      promise: sinon.stub().resolves({
+        projectsNotFound: [],
+      }),
+    });
+    this.sandbox.stub(client, 'startBuild').returns({
+      promise: sinon.stub().resolves({}),
+    });
+    const result = await fromCallback((done) => handler(e, {}, done));
+    expect(result).to.deep.equal([]);
+    expect(client.startBuild.callCount).to.equal(0);
   });
 });

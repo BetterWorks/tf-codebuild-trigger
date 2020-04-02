@@ -1,0 +1,12 @@
+{
+  "check-coverage": true,
+  "lines": 93,
+  "reporter": [
+    "lcov",
+    "text-summary"
+  ],
+  "temp-directory": "./coverage/.nyc_output",
+  "require": [
+    "@babel/register"
+  ]
+}
